@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'CSS/proyect_style.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <title>Gestor de Proyectos</title>
+</head>
+
+<body style="background-image: url('{% static 'images/fondo_pag.jpg' %}')">
+
+
+    <!--FORMULARIO PRINCIPAL PARA LA AGREGACION DE LOS PROYECTOS-->
+    <header>
+        <h1 class="main-title">Gestor de Proyectos</h1>
+    </header>
+
+    <div class="form-container">
+        <h2 class="section-title">Agregar Proyecto</h2>
+        <form method="POST" action="">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="proyectos" class="form-label">Proyecto</label>
+                <input type="text" class="form-control form-input" id="proyectos" name="proyectos" required>
+            </div>
+            <div class="mb-3">
+                <label for="rut" class="form-label">RUT</label>
+                <input type="text" class="form-control form-input" id="rut" name="rut" required>
+            </div>
+            <div class="mb-3">
+                <label for="nombre_integrante" class="form-label">Nombre del Integrante</label>
+                <input type="text" class="form-control form-input" id="nombre_integrante" name="nombre_integrante"
+                    required>
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar Proyecto</button>
+        </form>
+    </div>
+
+    <!--LISTA DE LOS PROYECTOS YA GUARDADOS EN LA BD-->
+    <div id="projectList" class="project-list">
+        <h2 class="section-title">Proyectos Guardados</h2>
+        {% if projects %}
+        {% for project in projects %}
+        <div class="project-container">
+            <form method="get">
+                <button type="submit" class="btn btn-secondary" name="toggle" value="{{ project.id }}">
+                    Proyecto {{ forloop.counter }}
+                </button>
+            </form>
+            {% if request.GET.toggle == project.id|stringformat:"s" %}
+            <div class="project-details">
+                <h3>Detalles del Proyecto</h3>
+                <pre>{{ project|safe }}</pre>
+
+              <!--CREACION DEL FORMULARIO PARA ACTUALIZAR LOS DATOS-->
+                <button class="btn btn-warning" onclick="toggleUpdateForm('{{ project.id }}')">
+                    Actualizar Proyecto
+                </button>
+                <div id="update-form-{{ project.id }}" class="update-form" style="display: none;">
+                    <form method="POST" action="/update/{{ project.id }}/">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="proyectos-{{ project.id }}" class="form-label">Proyecto</label>
+                            <input type="text" class="form-control form-input" id="proyectos-{{ project.id }}"
+                                name="proyectos" value="{{ project.proyectos }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="rut-{{ project.id }}" class="form-label">RUT</label>
+                            <input type="text" class="form-control form-input" id="rut-{{ project.id }}" name="rut"
+                                value="{{ project.rut }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="nombre_integrante-{{ project.id }}" class="form-label">Nombre del
+                                Integrante</label>
+                            <input type="text" class="form-control form-input" id="nombre_integrante-{{ project.id }}"
+                                name="nombre_integrante" value="{{ project.nombre_integrante }}" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Aceptar</button>
+                    </form>
+                </div>
+
+
+                <!--CREACION DE METODO DELETE DE NUESTROS ARCHIVOS/PROYECTOS -->
+                <form method="POST" action="/delete/{{ project.id }}/" class="delete-form">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-danger" onclick="confirmDelete(this.form)">Eliminar
+                        Proyecto</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% else %}
+        <p>No hay proyectos disponibles.</p>
+        {% endif %}
+    </div>
+
+    <!--CREAMOS UN SCRIPT PARA OBTENER LOS DATOS DE NUESTRA BD PARA ACTUALIZAR/ELIMINAR-->
+    <!--NOTA DEL AUTOR(OSEA YO): ESTA FUE LA UNICA FORMA QUE PUDE HACER QUE LOS DATOS PUDIESEN SER SOBREESCRITOS Y ELIMINADOS. NO PUDE HACER QUE DRF LO HICIERA POR SI MISMO-->
+    <!--OTRA NOTA DEL AUTOR: SI ESTA LEYENDO ESTO ME GUSTARIA SABER QUE OTRAS ALTERNATIVAS HUBIESE APLICADO PARA ESTO, ESTARE ATENTO A SU FEEDBACK-->
+    <script>
+        function toggleUpdateForm(projectId) {
+            const form = document.getElementById(`update-form-${projectId}`);
+            form.style.display = form.style.display === "none" ? "block" : "none";
+        }
+
+        function confirmDelete(form) {
+            if (confirm("¿Estás seguro de que deseas eliminar este proyecto? Esta acción no se puede deshacer.")) {
+                form.submit();
+            }
+        }
+    </script>
+</body>
+
+</html>
